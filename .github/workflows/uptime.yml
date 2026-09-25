@@ -18,6 +18,9 @@ jobs:
           WA_PHONE_NUMBER_ID: ${{ secrets.WA_PHONE_NUMBER_ID }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
           WA_TEMPLATE: ${{ vars.WA_TEMPLATE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: python3 uptime.py
       - name: Save state when it changed
         run: |

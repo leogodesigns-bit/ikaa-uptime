@@ -31,9 +31,9 @@ def check(url, key):
         return False, type(e).__name__ + ': ' + str(e)[:120]
 
 def alert(what, details):
-    if os.environ.get('WA_TOKEN'):
-        subprocess.run([sys.executable, 'wa-alert.py', what, details])
     print('ALERT:', what, '—', details)
+    if os.environ.get('WA_TOKEN') or os.environ.get('SMTP_USER'):
+        subprocess.run([sys.executable, 'notify.py', what, details])   # WhatsApp + email
 
 def main():
     try: state = json.load(open(STATE))
