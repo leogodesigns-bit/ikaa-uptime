@@ -17,6 +17,7 @@ jobs:
           WA_TOKEN: ${{ secrets.WA_TOKEN }}
           WA_PHONE_NUMBER_ID: ${{ secrets.WA_PHONE_NUMBER_ID }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
+          WA_TEMPLATE: ${{ vars.WA_TEMPLATE }}
         run: python3 uptime.py
       - name: Save state when it changed
         run: |

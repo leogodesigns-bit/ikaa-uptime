@@ -13,7 +13,7 @@ clip = lambda s: (s or '-').replace('\n', ' ').strip()[:900] or '-'
 ok = True
 for to in [t.strip() for t in os.environ['ALERT_TO'].split(',') if t.strip()]:
     body = {'messaging_product': 'whatsapp', 'to': to, 'type': 'template', 'template': {
-        'name': os.environ.get('WA_TEMPLATE', 'ikaa_ops_alert'), 'language': {'code': 'en'},
+        'name': os.environ.get('WA_TEMPLATE') or 'ikaa_ops_alert', 'language': {'code': 'en'},
         'components': [{'type': 'body', 'parameters': [{'type': 'text', 'text': clip(what)}, {'type': 'text', 'text': clip(details)}, {'type': 'text', 'text': now}]}]}}
     req = urllib.request.Request(f"https://graph.facebook.com/v21.0/{os.environ['WA_PHONE_NUMBER_ID']}/messages", data=json.dumps(body).encode(),
                                  headers={'Authorization': 'Bearer ' + os.environ['WA_TOKEN'], 'Content-Type': 'application/json'})
