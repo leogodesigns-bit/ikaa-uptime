@@ -1,1 +1,28 @@
-{}
+{
+ "_keepalive": "2026-09-25T18:00:33+00:00",
+ "https://bill.ikaajewellery.com/health": {
+  "alerted": false,
+  "down_since": null,
+  "fails": 0
+ },
+ "https://pay.ikaajewellery.com/health": {
+  "alerted": false,
+  "down_since": null,
+  "fails": 0
+ },
+ "https://www.ikaajewellery.com/": {
+  "alerted": false,
+  "down_since": null,
+  "fails": 0
+ },
+ "https://www.ikaajewellery.com/api/health": {
+  "alerted": false,
+  "down_since": null,
+  "fails": 0
+ },
+ "https://www.ikaajewellery.com/products/IK-EAR-036": {
+  "alerted": false,
+  "down_since": null,
+  "fails": 0
+ }
+}
