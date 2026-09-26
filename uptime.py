@@ -30,10 +30,11 @@ def check(url, key):
     except Exception as e:  # noqa: BLE001
         return False, type(e).__name__ + ': ' + str(e)[:120]
 
-def alert(what, details):
+def alert(what, details, urgent=False):
     print('ALERT:', what, '—', details)
-    if os.environ.get('WA_TOKEN') or os.environ.get('SMTP_USER'):
-        subprocess.run([sys.executable, 'notify.py', what, details])   # WhatsApp + email
+    if os.environ.get('WA_TOKEN') or os.environ.get('SMTP_USER') or os.environ.get('SETU_SEND_SECRET'):
+        # Site down is urgent (goes at once, day or night); back up is not.
+        subprocess.run([sys.executable, 'notify.py', what, details] + (['--urgent'] if urgent else []))   # WhatsApp + email
 
 def main():
     try: state = json.load(open(STATE))
@@ -55,7 +56,7 @@ def main():
             s['fails'] += 1
             s['down_since'] = s['down_since'] or now.isoformat(timespec='seconds')
             if s['fails'] >= 2 and not s['alerted']:
-                alert(f'{name} is down', f'{url}: {info} ({s["fails"]} checks in a row).')
+                alert(f'{name} is down', f'{url}: {info} ({s["fails"]} checks in a row).', urgent=True)
                 s['alerted'] = True
     last = state.get('_keepalive')
     if not last or (now - datetime.datetime.fromisoformat(last)).days >= 30:

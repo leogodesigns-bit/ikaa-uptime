@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Alert on every channel we have, each independent of the others:
 
-  notify.py "<what happened>" "<details>"
+  notify.py "<what happened>" "<details>" [--urgent]
 
-  1. WhatsApp through Meta's Cloud API (wa-alert.py; template WA_TEMPLATE)
+  1. WhatsApp through Setu's owner-alert queue (free inside the 24h window; quiet
+     hours 10 PM-8 AM except --urgent); if Setu can't be reached, straight through
+     Meta's Cloud API (wa-alert.py; template WA_TEMPLATE)
   2. Email through Gmail's SMTP server (independent of Meta and of Railway)
      Env: SMTP_USER (the Gmail address), SMTP_APP_PASSWORD (a Google app password),
           ALERT_EMAIL (where to send; default SMTP_USER). Skipped when not set.
@@ -11,7 +13,9 @@ Exit 0 when at least one channel delivered."""
 import datetime, os, smtplib, subprocess, sys
 from email.message import EmailMessage
 
-what, details = (sys.argv[1:3] + ['', ''])[:2]
+urgent = '--urgent' in sys.argv
+args = [a for a in sys.argv[1:] if a != '--urgent']
+what, details = (args[:2] + ['', ''])[:2]
 here = os.path.dirname(os.path.abspath(__file__))
 now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=5, minutes=30))).strftime('%d %b %Y, %H:%M IST')
 run = os.environ.get('GITHUB_RUN_URL') or (
@@ -19,7 +23,26 @@ run = os.environ.get('GITHUB_RUN_URL') or (
     if os.environ.get('GITHUB_RUN_ID') else '')
 ok = []
 
-if os.environ.get('WA_TOKEN'):
+# WhatsApp: through Setu's owner-alert queue first (free inside the 24-hour window,
+# a Utility template only for urgent alerts when it is closed, 10 PM - 8 AM only
+# urgent ones, each alert once). Only if Setu can't be reached (e.g. Railway down),
+# straight through Meta (wa-alert.py) so the alert still gets out.
+def via_setu():
+    url, secret = os.environ.get('SETU_OWNER_ALERT_URL'), os.environ.get('SETU_SEND_SECRET')
+    if not (url and secret): return False
+    import json, urllib.request
+    body = {'secret': secret, 'tenant_slug': os.environ.get('SETU_TENANT', 'ikaa'), 'kind': os.environ.get('ALERT_KIND', 'ops'),
+            'urgent': urgent, 'text': f"{what}: {details}"[:2900], 'dedupe_key': (os.environ.get('GITHUB_RUN_ID', '') + ':' + what)[:120]}
+    req = urllib.request.Request(url, data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            j = json.loads(r.read()); print('setu owner-alert:', j); return j.get('ok') is True
+    except Exception as e:  # noqa: BLE001
+        print('setu owner-alert FAILED:', type(e).__name__, str(e)[:200]); return False
+
+if via_setu():
+    ok.append('whatsapp (Setu queue)')
+elif os.environ.get('WA_TOKEN'):
     r = subprocess.run([sys.executable, os.path.join(here, 'wa-alert.py'), what, details])
     if r.returncode == 0: ok.append('whatsapp')
 
