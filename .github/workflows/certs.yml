@@ -1,0 +1,29 @@
+# Ikaa certificates + domain: once a day. URGENT alert when an HTTPS certificate expires in
+# under 14 days or the domain in under 30. Run by hand with fake_now=YYYY-MM-DD to test.
+name: certs
+on:
+  schedule: [{ cron: '30 3 * * *' }]   # 09:00 IST
+  workflow_dispatch:
+    inputs:
+      fake_now: { description: 'Pretend today is (YYYY-MM-DD), to test the alert', required: false, default: '' }
+permissions: { contents: read }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check
+        env:
+          FAKE_NOW: ${{ inputs.fake_now }}
+          ALERT_KIND: site
+          SETU_OWNER_ALERT_URL: ${{ vars.SETU_OWNER_ALERT_URL }}
+          SETU_SEND_SECRET: ${{ secrets.SETU_SEND_SECRET }}
+          WA_TOKEN: ${{ secrets.WA_TOKEN }}
+          WA_PHONE_NUMBER_ID: ${{ secrets.WA_PHONE_NUMBER_ID }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          WA_TEMPLATE: ${{ vars.WA_TEMPLATE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: python3 certs.py

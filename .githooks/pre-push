@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# .githooks/pre-push — pushing main changes what the live monitor runs, so every push must
+# compile and pass test_certs.py. Enable once per clone: git config core.hooksPath .githooks
+set -u
+cd "$(git rev-parse --show-toplevel)" || exit 1
+if ! git diff --quiet HEAD --; then
+  echo "pre-push: uncommitted changes — commit or stash first. Nothing was pushed."; exit 1
+fi
+python3 -m py_compile *.py && python3 test_certs.py || { echo "pre-push: check failed — nothing was pushed."; exit 1; }
